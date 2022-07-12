@@ -1,0 +1,183 @@
+<h1>Cestovné Poistenie</h1>
+<form id="insuranceForm">
+  <div>
+    <input type="radio" id="insuranceLength" name="insuranceLength" value="shortTermInsurance" required="required">
+    <label for="shortTermInsurance">Krátkodobé CP</label>
+  </div>
+
+  <div>
+    <input type="radio" id="insuranceLength" name="insuranceLength" value="longTermInsurance">
+    <label for="longTermInsurance">Celoročné CP</label>
+  </div>
+
+</br>
+
+  <div>
+    <label for="startDateInput">Začiatok poistenia</label>
+    <input type="date" id="startDate">
+  </div>
+
+  <div id="endDateInput" style="display:none">
+    <label for="endDate">Koniec poistenia</label>
+    <input type="date" id="endDate">
+  </div>
+
+  </br>
+
+  <div>
+    <label>Typ balíka</label>
+      <select name="packageType" id="packageType">
+        <option value="" selected disabled hidden>Vyberte si</option>
+        <option value="basic">Základný</option>
+        <option value="advanced">Rozšírený</option>
+        <option value="extra">Extra</option>
+      </select>
+  </div>
+
+  </br>
+
+  <div>
+   <input type="checkbox" id="insuranceExtraStorno" name="insuranceExtraStorno" value="storno">
+   <label for="storno">Storno cesty</label>
+  </div>
+
+  <div>
+   <input type="checkbox" id="insuranceExtraSport" name="insuranceExtraSport" value="sport">
+   <label for="sport">Športové aktivity</label>
+  </div>
+
+  </br>
+
+  <div>
+    <label>Počet osôb</label>
+      <select name="numberOfPeople" id="numberOfPeople">
+        <option value="" selected disabled hidden>Vyberte si</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+  </div>
+  <input type="submit" id="calculation">
+
+</form>
+ <p id="finalPrice"></p>
+ <p id="expirationDateYearly"></p>
+<script>
+
+
+document.getElementById('insuranceForm').addEventListener('change', compute);
+
+function compute () {
+  let insuranceLength = document.querySelector('input[name="insuranceLength"]:checked').value;
+  let insuranceDateStartInput = document.getElementById('startDate').value;
+  let insuranceDateEndInput = document.getElementById('endDate').value;
+  let insuranceExtraStorno = document.getElementById('insuranceExtraStorno').checked
+  let insuranceExtraSport = document.getElementById('insuranceExtraSport').checked;
+
+  let packageType = document.getElementById('packageType');
+  let packageTypeValue = packageType.options[packageType.selectedIndex].value;
+
+  let numberOfPeopleInput = document.getElementById('numberOfPeople');
+  let numberOfPeopleValue = numberOfPeopleInput.options[numberOfPeopleInput.selectedIndex].value;
+
+  insuranceDateStartValue = new Date(insuranceDateStartInput);
+  insuranceDateEndValue = new Date(insuranceDateEndInput);
+
+  const oneDay = 24 * 60 * 60 * 1000;
+  let numberOfDays = Math.round(Math.abs(((insuranceDateStartValue - insuranceDateEndValue) / oneDay) ));
+  let correctedNumberOfDays = numberOfDays + 1; // ratam kazdy zacaty den //
+  let numberOfPeople = parseInt(numberOfPeopleValue);
+
+  if (insuranceDateEndValue < insuranceDateStartValue) {
+    alert('Začiatok poistenia je neskôr ako deň ukončenia');
+    document.getElementById('packageType').setAttribute("disabled","disabled");
+    document.getElementById('numberOfPeople').setAttribute("disabled","disabled");
+    document.getElementById("insuranceExtraStorno").disabled = true;
+    document.getElementById("insuranceExtraSport").disabled = true;
+} else {
+  document.getElementById('packageType').removeAttribute("disabled");
+    document.getElementById('numberOfPeople').removeAttribute("disabled");
+    document.getElementById("insuranceExtraStorno").disabled = false;
+    document.getElementById("insuranceExtraSport").disabled = false;
+}
+
+
+  if (insuranceLength === 'shortTermInsurance') {
+    endDateInput.style.display ="block";
+
+    let package = new Map([
+      ['basic', 1.2],
+      ['advanced', 1.8],
+      ['extra', 2.4],
+    ]);
+
+    let storno = new Map([
+      [true, 1.5],
+      [false, 1],
+    ]);
+
+    let sport = new Map([
+      [true, 1.3],
+      [false, 1],
+    ]);
+   
+    let packagePricePerDay = package.get(packageTypeValue);
+    let stornoValuePerDay = storno.get(insuranceExtraStorno);
+    let sportValuePerDay = sport.get(insuranceExtraSport);
+
+    let finalPrice = packagePricePerDay * correctedNumberOfDays * stornoValuePerDay * sportValuePerDay * numberOfPeople;
+
+    document.getElementById('calculation').addEventListener('click', insuranceCalculation);
+
+  function insuranceCalculation (e) {
+    e.preventDefault();
+      document.getElementById('finalPrice').innerHTML = finalPrice.toFixed(2) + "€";
+      document.getElementById('expirationDateYearly').innerHTML = "";
+    }
+
+  } else {
+    endDateInput.style.display ="none";
+    let package = new Map([
+      ['basic', 39],
+      ['advanced', 49],
+      ['extra', 59],
+    ]);
+
+    let storno = new Map([
+      [true, 1.2],
+      [false, 1],
+    ]);
+
+    let sport = new Map([
+      [true, 1.1],
+      [false, 1],
+    ]);
+
+    let packagePricePerYear = package.get(packageTypeValue);
+    let stornoValuePerYear = storno.get(insuranceExtraStorno);
+    let sportValuePerYear = sport.get(insuranceExtraSport);
+
+    let finalPrice = packagePricePerYear * stornoValuePerYear * sportValuePerYear * numberOfPeople;
+
+    document.getElementById('calculation').addEventListener('click', insuranceCalculation);
+
+  function insuranceCalculation (e) {
+    e.preventDefault();
+      document.getElementById('finalPrice').innerHTML = finalPrice.toFixed(2) + "€";
+
+    function isLeap() {
+      let expirationDateAfterYear = new Date(insuranceDateStartValue);
+      expirationDateAfterYear.setDate(expirationDateAfterYear.getDate() + 364);
+      let leapYear = expirationDateAfterYear.getFullYear()
+
+      document.getElementById('expirationDateYearly').innerHTML = 'Ročné poistenie expiruje: ' + expirationDateAfterYear + 
+      '</br>' + 'Priestupný rok :' + ( new Date(leapYear, 1, 29).getDate() === 29) + '</br>' + 
+      'Poznámka: Ak by bol priestupný rok, môžeme nastaviť expiration date na začiatok poistenia + 365 dni';
+    }
+
+    isLeap();
+
+    }
+  }
+}
+</script>
